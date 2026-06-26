@@ -123,24 +123,15 @@ if (!gl) {
 }
 var dpr = Math.min(window.devicePixelRatio || 1, 2);
 var W, H;
-var VISIBLE_TILES = 3;
-var GAP_RATIO = 0.0618;
-var TILE_ASPECT = 0.618;
+var TILE_ASPECT = 16 / 9;
 var TILE, TILE_H, GAP, STEP, TOTAL_W, CENTER_X;
 function calibrateLayout() {
-  var prevStep = STEP;
-  TILE = W / (VISIBLE_TILES + (VISIBLE_TILES + 1) * GAP_RATIO);
-  TILE_H = Math.min(TILE / TILE_ASPECT, H * 0.82);
-  GAP = TILE * GAP_RATIO;
+  TILE = 330;
+  TILE_H = 330;
+  GAP = 42;
   STEP = TILE + GAP;
-  if (prevStep) {
-    var ratio = STEP / prevStep;
-    scrollTarget *= ratio;
-    scrollCurrent *= ratio;
-    prevScroll *= ratio;
-  }
   TOTAL_W = STEP * portfolioData.length;
-  CENTER_X = GAP + TILE / 2 + STEP;
+  CENTER_X = W / 2;
 }
 function resize() {
   W = window.innerWidth;
@@ -364,7 +355,9 @@ document.getElementById("dd-deeper").addEventListener("click", function () {
 window.addEventListener("keydown", function (e) { if (e.key === "Escape" && explodedIndex !== -1) closeExplosion(); });
 var scrollTarget = 0;
 var scrollCurrent = 0;
-var prevScroll = 0;
+var scrollVelocity = 0;
+var waveIntensity = 0;
+var lastTime = 0;
 var focusedIndex = 0;
 var hoveredIndex = -1;
 var kbdHintTimer = null;
@@ -379,7 +372,7 @@ canvas.style.pointerEvents = "auto";
 window.addEventListener("pointerdown", function (e) { dragging = true; dragStartX = e.clientX; dragStartScroll = scrollTarget; });
 window.addEventListener("pointermove", function (e) { if (!dragging) return; scrollTarget = dragStartScroll - (e.clientX - dragStartX) * 2; });
 window.addEventListener("pointerup", function () { dragging = false; });
-canvas.addEventListener("click", function (e) { if (Math.abs(scrollCurrent - prevScroll) > 4) return; var idx = hitTest(e.clientX, e.clientY); if (idx !== -1) { triggerExplosion(idx); } else if (explodedIndex !== -1) { closeExplosion(); } });
+canvas.addEventListener("click", function (e) { if (Math.abs(scrollVelocity) > 4) return; var idx = hitTest(e.clientX, e.clientY); if (idx !== -1) { triggerExplosion(idx); } else if (explodedIndex !== -1) { closeExplosion(); } });
 canvas.addEventListener("mousemove", function (e) { hoveredIndex = hitTest(e.clientX, e.clientY); canvas.style.cursor = hoveredIndex !== -1 ? "pointer" : "default"; });
 function hitTest(mx, my) { var centerY = H / 2; for (var i = -2; i <= portfolioData.length + 2; i++) { var baseX = i * STEP - mod(scrollCurrent, TOTAL_W) + CENTER_X - TILE / 2; if (mx >= baseX && mx <= baseX + TILE && my >= centerY - TILE_H / 2 && my <= centerY + TILE_H / 2) { return mod(i, portfolioData.length); } } return -1; }
 canvas.setAttribute("tabindex", "0");
@@ -388,10 +381,15 @@ canvas.setAttribute("role", "group");
 canvas.setAttribute("aria-label", "Galería de portafolio — usa las flechas para navegar");
 canvas.addEventListener("keydown", function (e) { if (e.key === "ArrowRight") { focusedIndex = mod(focusedIndex + 1, portfolioData.length); snapToIndex(focusedIndex); e.preventDefault(); } if (e.key === "ArrowLeft") { focusedIndex = mod(focusedIndex - 1, portfolioData.length); snapToIndex(focusedIndex); e.preventDefault(); } if (e.key === "Enter") { triggerExplosion(focusedIndex); } });
 canvas.addEventListener("focus", showKbdHint);
-function frame() {
-  var ease = 0.085;
-  scrollCurrent += (scrollTarget - scrollCurrent) * ease;
-  prevScroll = scrollCurrent;
+function frame(timestamp) {
+  var deltaTime = lastTime ? Math.min((timestamp - lastTime) / 16.667, 3) : 1;
+  lastTime = timestamp;
+  var lerpFactor = 1 - Math.pow(0.92, deltaTime);
+  var prevCurrent = scrollCurrent;
+  scrollCurrent += (scrollTarget - scrollCurrent) * lerpFactor;
+  scrollVelocity = (scrollCurrent - prevCurrent) / deltaTime;
+  var targetIntensity = Math.min(Math.abs(scrollVelocity) * 2.8, 1.0);
+  waveIntensity += (targetIntensity - waveIntensity) * (targetIntensity > waveIntensity ? 0.35 : 0.08);
   var centeredIndex = mod(Math.round(scrollCurrent / STEP), portfolioData.length);
   syncActiveProject(centeredIndex);
   waveLineEl.style.opacity = "0";
@@ -404,7 +402,7 @@ function frame() {
   gl.uniform3fv(glLocations.uActiveAccent, activeAccentVec3);
   var waveCenterX = W / 2 - mod(scrollCurrent, STEP) + STEP / 2;
   gl.uniform1f(glLocations.uWaveCenterX, waveCenterX);
-  gl.uniform1f(glLocations.uWaveStrength, 0);
+  gl.uniform1f(glLocations.uWaveStrength, 0.0);
   gl.uniform1f(glLocations.uWaveWidth, STEP * FOCUS_FALLOFF_WIDTH_FACTOR);
   gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
   gl.enableVertexAttribArray(glLocations.aPosition);
@@ -476,8 +474,9 @@ function frame() {
     var parallax = (distFromCenter / W) * 0.4;
     gl.uniform1f(glLocations.uParallaxOffset, parallax);
     var distNorm = Math.abs(tileOffsetX - W / 2) / (W / 2);
-    var colorReveal = Math.max(0, 1.0 - distNorm * 1.8);
-    gl.uniform1f(glLocations.uWaveIntensity, colorReveal);
+    var proximityColor = Math.max(0, 1.0 - distNorm * 1.8);
+    var finalReveal = Math.max(proximityColor * 0.3, waveIntensity * (1.0 - distNorm * 0.6));
+    gl.uniform1f(glLocations.uWaveIntensity, Math.min(finalReveal, 1.0));
     gl.uniform2fv(glLocations.uImageAspectCorrection, imageAspectCorrections[idx]);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, glTextures[idx]);

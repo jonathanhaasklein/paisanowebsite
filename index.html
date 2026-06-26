@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>paisano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Prociono&family=Archivo+Black&family=Anton&family=Big+Shoulders+Display:wght@900&family=Bodoni+Moda:wght@900&family=Audiowide&family=Gloock&family=Unbounded:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app" aria-label="paisano — portafolio">
+  <img id="brand-logo" src="assets/branding/logo.png" alt="paisano" />
+  <button type="button" id="n0" class="heavy" aria-label="paisano — volver al inicio"></button>
+  <nav class="n1 mono"><button type="button" id="about-btn">about</button></nav>
+  <div id="n2" class="mono"><a href="https://maps.google.com/?q=Buenos+Aires" target="_blank" rel="noopener noreferrer">visitanos</a></div>
+  <div id="n3" class="mono">
+    <div class="row">
+      <a class="ig" href="https://instagram.com/paisano" target="_blank" rel="noopener noreferrer">instagram</a>
+      <a class="wa" href="https://wa.me/0000000000" target="_blank" rel="noopener noreferrer">wassap</a>
+      <a class="pin" href="https://pinterest.com/paisano" target="_blank" rel="noopener noreferrer">pinterest</a>
+      <a class="mail" id="mail-link" href="#" rel="nofollow">mail</a>
+    </div>
+  </div>
+  <canvas id="c2d" aria-hidden="true"></canvas>
+  <h1 id="explosion-display-title" aria-hidden="true"></h1>
+  <div id="numbering" class="mono" aria-hidden="true"></div>
+  <div id="tech-sheet" class="mono" aria-hidden="true"></div>
+  <span id="kbd-hint" class="mono">← → para navegar · enter para abrir</span>
+  <div id="deep-dive" role="region" aria-label="Detalle del proyecto">
+    <div class="dd-row">
+      <div class="dd-copy">
+        <h2 id="dd-title"></h2>
+        <p class="dd-desc" id="dd-desc"></p>
+        <div class="dd-fields" id="dd-fields"></div>
+      </div>
+      <div class="dd-actions">
+        <button type="button" id="dd-deeper">entrar en profundidad →</button>
+        <button type="button" class="dd-close" id="dd-close">cerrar</button>
+      </div>
+    </div>
+  </div>
+  <nav id="portfolio-nav" aria-label="Portafolio (lista accesible)">
+    <ul id="portfolio-list"></ul>
+  </nav>
+  <div id="about-panel" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <div id="about-card">
+      <button type="button" class="dd-close" id="about-close">cerrar</button>
+      <h2 id="about-title">paisano es una forma de mirar lo cotidiano con más peso.</h2>
+      <p>Trabajamos con marcas y proyectos que necesitan una presencia visual más íntima, precisa y memorable. La idea no es solo mostrar contenido, sino construir un ambiente que se sienta vivo desde el primer vistazo.</p>
+      <div class="about-meta">
+        <span>Diseño + desarrollo</span>
+        <span>Motion y identidad</span>
+        <span>WebGL y experiencias</span>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="effects.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

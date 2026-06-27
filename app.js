@@ -1,6 +1,7 @@
 import { VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE } from "./shaders.js";
+gsap.registerPlugin(Flip);
 
-window._A = { config: { v: 1, isLocal: true }, color: { bg: { hex: "#F4F1EA" }, txt: { hex: "#0F1011" }, accent1: { hex: "#FF663F" }, accent2: { hex: "#0066FF" } }, page: "home" };
+window._A = { config: { v: 1, isLocal: true }, color: { bg: { hex: "#0F1011" }, txt: { hex: "#F4F1EA" }, accent1: { hex: "#FF663F" }, accent2: { hex: "#0066FF" } }, page: "home" };
 var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 (function setupMail() {
   var user = "jonathanhaasklein";
@@ -12,13 +13,55 @@ var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
   });
 })();
 (function setupWordmark() {
-  var word = "paisano";
   var el = document.getElementById("n0");
-  word.split("").forEach(function (ch) {
-    var span = document.createElement("span");
-    span.className = "ch";
-    span.textContent = ch;
-    el.appendChild(span);
+  el.setAttribute("data-text", "paisano");
+
+  var wrapper = document.createElement("span");
+  wrapper.className = "wordmark";
+
+  var base = document.createElement("span");
+  base.textContent = "paisan";
+
+  var lastLetter = document.createElement("span");
+  lastLetter.className = "last-letter";
+  lastLetter.textContent = "o";
+
+  wrapper.appendChild(base);
+  wrapper.appendChild(lastLetter);
+  el.appendChild(wrapper);
+
+  var isPaisana = false;
+
+  function toggleName() {
+    var wrapper = el.querySelector(".wordmark");
+    var letter = el.querySelector(".last-letter");
+
+    // Fase 1: flip out
+    wrapper.classList.add("flip-out");
+
+    setTimeout(function() {
+      // Cambiar letra en el punto medio
+      isPaisana = !isPaisana;
+      letter.textContent = isPaisana ? "a" : "o";
+
+      // Fase 2: preparar flip in
+      wrapper.classList.remove("flip-out");
+      wrapper.classList.add("flip-in");
+
+      // Forzar reflow
+      wrapper.offsetHeight;
+
+      // Fase 3: flip in
+      wrapper.classList.remove("flip-in");
+    }, 350);
+  }
+
+  // Alternar cada 4 segundos
+  setInterval(toggleName, 4000);
+
+  // También al hover
+  el.addEventListener("mouseenter", function() {
+    toggleName();
   });
 })();
 function relativeLuminance(hex) {
@@ -59,15 +102,23 @@ function legibleAccentFor(accentHex, bgHex) {
   return target;
 }
 var COLOR_GROUPS = [
-  { name: "Gris Neutro & Turquesa", bg: "#2F2F30", texto: "#DADACF", acento: "#3F9999", displayFont: "'Archivo Black', sans-serif" },
-  { name: "Gótico & Sangre", bg: "#1D191F", texto: "#8F8893", acento: "#B52318", displayFont: "'Anton', sans-serif" },
-  { name: "Monocromo & Madera", bg: "#E9E8E1", texto: "#2F2012", acento: "#ABA8A3", displayFont: "'Big Shoulders Display', sans-serif" },
-  { name: "Oro Viejo & Arena", bg: "#3A3128", texto: "#CBC9C4", acento: "#D7A640", displayFont: "'Bodoni Moda', serif" },
-  { name: "Cyber Azul & Eléctrico", bg: "#151518", texto: "#F6FBED", acento: "#4981DC", displayFont: "'Audiowide', sans-serif" },
-  { name: "Rosa Salmón & Tierra", bg: "#B6AEA7", texto: "#1E1A18", acento: "#D99B93", displayFont: "'Gloock', serif" },
-  { name: "Asfalto & Crema", bg: "#0E0B08", texto: "#E5D9C3", acento: "#4D2B0B", displayFont: "'Unbounded', sans-serif" }
+  { bg: "#1D1D1D", texto: "#F4F1EA", acento: "#F4F1EA", displayFont: "'Archivo Black', sans-serif" },
+  { bg: "#B52318", texto: "#FFFFFF", acento: "#FFFFFF", displayFont: "'Anton', sans-serif" },
+  { bg: "#E9E8E1", texto: "#1D1D1D", acento: "#1D1D1D", displayFont: "'Big Shoulders Display', sans-serif" },
+  { bg: "#3A3128", texto: "#D7A640", acento: "#D7A640", displayFont: "'Bodoni Moda', serif" },
+  { bg: "#151518", texto: "#4981DC", acento: "#4981DC", displayFont: "'Audiowide', sans-serif" },
+  { bg: "#B6AEA7", texto: "#1E1A18", acento: "#1E1A18", displayFont: "'Gloock', serif" },
+  { bg: "#2F2F30", texto: "#3F9999", acento: "#3F9999", displayFont: "'Archivo Black', sans-serif" },
+  { bg: "#F0E6D3", texto: "#0E0B08", acento: "#0E0B08", displayFont: "'Big Shoulders Display', sans-serif" },
+  { bg: "#B52318", texto: "#FFFFFF", acento: "#FFFFFF", displayFont: "'Anton', sans-serif" },
+  { bg: "#E9E8E1", texto: "#1D1D1D", acento: "#1D1D1D", displayFont: "'Bodoni Moda', serif" },
+  { bg: "#0E0B08", texto: "#E5D9C3", acento: "#E5D9C3", displayFont: "'Unbounded', sans-serif" },
+  { bg: "#3A3128", texto: "#D7A640", acento: "#D7A640", displayFont: "'Bodoni Moda', serif" }
 ];
-COLOR_GROUPS.forEach(function (g) { g.acentoTitulo = legibleAccentFor(g.acento, g.bg); });
+COLOR_GROUPS.forEach(function(g) {
+  g.name = g.bg;
+  g.acentoTitulo = g.acento;
+});
 function getMockPortfolioData() {
   var skills = ["WEBGL", "JS ANIM", "LAYOUT AVANZADO", "CIFRADO SEGURO", "FEED INTEGRATION"];
   var titles = ["estudio norte", "llovizna", "casa marfil", "río seco", "cantera", "marejada", "tierra adentro", "alto verde", "puente viejo", "monte claro", "bajo fondo", "campo abierto"];
@@ -126,9 +177,9 @@ var W, H;
 var TILE_ASPECT = 16 / 9;
 var TILE, TILE_H, GAP, STEP, TOTAL_W, CENTER_X;
 function calibrateLayout() {
-  TILE = 330;
-  TILE_H = 330;
-  GAP = 42;
+  TILE = 300;
+  TILE_H = 300;
+  GAP = 32;
   STEP = TILE + GAP;
   TOTAL_W = STEP * portfolioData.length;
   CENTER_X = W / 2;
@@ -294,8 +345,6 @@ function syncActiveProject(centeredIndex) {
   activeProjectIndex = centeredIndex;
   var item = portfolioData[centeredIndex];
   activeAccentVec3 = hexToVec3(item.palette.acento);
-  document.documentElement.style.setProperty("--bg", item.palette.bg);
-  document.documentElement.style.setProperty("--txt", pickTextColorFor(item.palette.bg, item.palette.texto));
   [numberingEl, techSheetEl].forEach(function (el) { el.classList.add("fade-swap"); });
   setTimeout(function () {
     numberingEl.textContent = (centeredIndex + 1).toString().padStart(2, "0") + " / " + portfolioData.length.toString().padStart(2, "0");
@@ -307,50 +356,77 @@ var explodedIndex = -1;
 var explosionState = { progress: 0 };
 var explosionTimeline = null;
 var deepDiveEl = document.getElementById("deep-dive");
-var ddTitleEl = document.getElementById("dd-title");
-var ddDescEl = document.getElementById("dd-desc");
-var ddFieldsEl = document.getElementById("dd-fields");
-var explosionTitleEl = document.getElementById("explosion-display-title");
-explosionTitleEl.style.position = "fixed";
-explosionTitleEl.style.top = "50%";
-explosionTitleEl.style.left = "50%";
-explosionTitleEl.style.transform = "translate(-50%, -50%)";
-explosionTitleEl.style.zIndex = "25";
-explosionTitleEl.style.margin = "0";
-explosionTitleEl.style.fontSize = "clamp(80px, 15vw, 180px)";
-explosionTitleEl.style.fontWeight = "900";
-explosionTitleEl.style.textTransform = "uppercase";
-explosionTitleEl.style.color = "var(--txt)";
-explosionTitleEl.style.whiteSpace = "nowrap";
-explosionTitleEl.style.pointerEvents = "none";
-explosionTitleEl.style.opacity = "0";
+var titleTopEl = document.getElementById("explosion-title-top");
+var titleBottomEl = document.getElementById("explosion-title-bottom");
 function triggerExplosion(idx) {
   if (explosionTimeline) explosionTimeline.kill();
   explodedIndex = idx;
   var item = portfolioData[idx];
   activeProjectIndex = idx;
   activeAccentVec3 = hexToVec3(item.palette.acento);
+  document.getElementById("app").style.boxShadow = "inset 0 0 0 1.5px " + item.palette.acento;
+  var overlayEl = document.getElementById("explosion-overlay");
+  overlayEl.style.backgroundColor = item.palette.bg;
+  overlayEl.classList.add("active");
   document.documentElement.style.setProperty("--exploded-font", item.palette.displayFont);
   document.documentElement.style.setProperty("--exploded-accent", item.palette.acentoTitulo);
-  ddTitleEl.textContent = item.title;
-  ddDescEl.innerHTML = item.descripcion.replace(item.meta.tipo.toLowerCase(), '<span class="dd-accent">' + item.meta.tipo.toLowerCase() + '</span>');
-  ddFieldsEl.innerHTML = '<div><b>Completado</b>' + item.meta.completado + '</div>' + '<div><b>Tipo</b>' + item.meta.tipo + '</div>' + '<div><b>Rol</b>' + item.meta.rol + '</div>';
-  explosionTitleEl.textContent = item.title;
-  gsap.set(deepDiveEl, { yPercent: 100, autoAlpha: 0 });
-  gsap.set(explosionTitleEl, { opacity: 0 });
-  deepDiveEl.classList.add("open");
-  techSheetEl.classList.add("stage-2");
+  var words = item.title.toUpperCase().split(" ");
+  var mid = Math.ceil(words.length / 2);
+  titleTopEl.textContent = words.slice(0, mid).join(" ");
+  titleBottomEl.textContent = words.slice(mid).join(" ");
+  titleTopEl.style.color = item.palette.acento;
+  titleBottomEl.style.color = item.palette.acento;
   var d = reduceMotion ? 0.15 : null;
-  explosionTimeline = gsap.timeline({ onReverseComplete: function () { explodedIndex = -1; deepDiveEl.classList.remove("open"); techSheetEl.classList.remove("stage-2"); canvas.focus(); } });
-  explosionTimeline.to(document.documentElement, { "--bg": item.palette.bg, "--txt": pickTextColorFor(item.palette.bg, item.palette.texto), duration: d || 0.5, ease: "power4.out" }).to(explosionState, { progress: 1, duration: d || 0.9, ease: "power4.out" }, "<").to(explosionTitleEl, { opacity: 1, duration: d || 0.9, ease: "power4.out" }, "<").to(deepDiveEl, { yPercent: 0, autoAlpha: 1, duration: d || 0.6, ease: "power4.out" }, "<0.2");
+
+  gsap.set(deepDiveEl, { yPercent: 100, autoAlpha: 0 });
+  deepDiveEl.classList.add("open");
+
+  explosionTimeline = gsap.timeline({
+    onReverseComplete: function() {
+      explodedIndex = -1;
+      deepDiveEl.classList.remove("open");
+      document.getElementById("app").style.boxShadow = "inset 0 0 0 1.5px #D7A640";
+      canvas.focus();
+    }
+  });
+
+  explosionTimeline
+    .to(document.documentElement, {
+      "--bg": item.palette.bg,
+      "--txt": item.palette.texto,
+      duration: d || 0.8,
+      ease: "power3.inOut"
+    })
+    .to(explosionState, {
+      progress: 1,
+      duration: d || 1.1,
+      ease: "power3.inOut"
+    }, "<")
+    .to([titleTopEl, titleBottomEl], {
+      opacity: 1,
+      y: 0,
+      duration: d || 0.8,
+      ease: "power3.out",
+      stagger: 0.05
+    }, "<0.2")
+    .to(deepDiveEl, {
+      yPercent: 0,
+      autoAlpha: 1,
+      duration: d || 0.6,
+      ease: "power3.out"
+    }, "<0.3");
+
+  document.getElementById("app").style.boxShadow = "inset 0 0 0 1.5px " + item.palette.acento;
   document.getElementById("dd-close").focus();
 }
-function closeExplosion() { if (!explosionTimeline || explodedIndex === -1) return; explosionTimeline.reverse(); }
+function closeExplosion() {
+  if (!explosionTimeline || explodedIndex === -1) return;
+  explosionTimeline.timeScale(1.4).reverse();
+  document.getElementById("explosion-overlay").classList.remove("active");
+}
 document.getElementById("dd-close").addEventListener("click", closeExplosion);
-document.getElementById("dd-deeper").addEventListener("click", function () {
-  var item = portfolioData[explodedIndex];
-  var placeholder = "data:text/html;charset=utf-8," + encodeURIComponent("<title>" + item.title + "</title><body style='font-family:sans-serif;padding:48px;background:#F4F1EA;color:#0F1011'><h1>" + item.title + "</h1><p>Caso de estudio completo — pendiente de contenido real.</p><p>Cerrá esta pestaña para volver a la vista en profundidad.</p></body>");
-  window.open(placeholder, "_blank", "noopener");
+document.getElementById("dd-explore").addEventListener("click", function () {
+  console.log("etapa 3 — pendiente");
 });
 window.addEventListener("keydown", function (e) { if (e.key === "Escape" && explodedIndex !== -1) closeExplosion(); });
 var scrollTarget = 0;
@@ -388,7 +464,7 @@ function frame(timestamp) {
   var prevCurrent = scrollCurrent;
   scrollCurrent += (scrollTarget - scrollCurrent) * lerpFactor;
   scrollVelocity = (scrollCurrent - prevCurrent) / deltaTime;
-  var targetIntensity = Math.min(Math.abs(scrollVelocity) * 2.8, 1.0);
+  var targetIntensity = Math.min(Math.abs(scrollVelocity) * 6.0, 1.0);
   waveIntensity += (targetIntensity - waveIntensity) * (targetIntensity > waveIntensity ? 0.35 : 0.08);
   var centeredIndex = mod(Math.round(scrollCurrent / STEP), portfolioData.length);
   syncActiveProject(centeredIndex);
@@ -439,11 +515,11 @@ function frame(timestamp) {
       } else if (rel === -1) {
         targetOffsetX = TILE * 0.5 + 32;
         targetScale = TILE;
-        targetAlpha = 1;
+        targetAlpha = 0.35;
       } else if (rel === 1) {
         targetOffsetX = W - TILE * 0.5 - 32;
         targetScale = TILE;
-        targetAlpha = 1;
+        targetAlpha = 0.35;
       } else {
         targetOffsetX = tileOffsetX;
         targetScale = TILE;
@@ -457,10 +533,14 @@ function frame(timestamp) {
     var tileScaleX, tileScaleY;
     if (exploding) {
       tileScaleX = tileScale;
-      tileScaleY = tileScale / TILE_ASPECT;
+      tileScaleY = tileScale;
     } else {
-      tileScaleX = TILE;
-      tileScaleY = TILE_H;
+      var distFromCenter = Math.abs(tileOffsetX - W / 2);
+      var proximity = Math.max(0, 1.0 - distFromCenter / (STEP * 2.5));
+      var maxScale = (STEP - 4) / TILE;
+      var scaleBoost = 1.0 + proximity * waveIntensity * (maxScale - 1.0);
+      tileScaleX = TILE * scaleBoost;
+      tileScaleY = TILE * scaleBoost;
       tileAlpha = 1.0;
     }
     var hoverReveal = (idx === hoveredIndex && !exploding) ? 1.0 : 0.0;
@@ -470,13 +550,8 @@ function frame(timestamp) {
     gl.uniform1f(glLocations.uHoverReveal, hoverReveal);
     gl.uniform1f(glLocations.uExplosion, tileExplosionUniform);
     gl.uniform1f(glLocations.uAlpha, tileAlpha);
-    var distFromCenter = tileOffsetX - W / 2;
-    var parallax = (distFromCenter / W) * 0.4;
-    gl.uniform1f(glLocations.uParallaxOffset, parallax);
-    var distNorm = Math.abs(tileOffsetX - W / 2) / (W / 2);
-    var proximityColor = Math.max(0, 1.0 - distNorm * 1.8);
-    var finalReveal = Math.max(proximityColor * 0.3, waveIntensity * (1.0 - distNorm * 0.6));
-    gl.uniform1f(glLocations.uWaveIntensity, Math.min(finalReveal, 1.0));
+    gl.uniform1f(glLocations.uParallaxOffset, 0.0);
+    gl.uniform1f(glLocations.uWaveIntensity, hoverReveal);
     gl.uniform2fv(glLocations.uImageAspectCorrection, imageAspectCorrections[idx]);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, glTextures[idx]);

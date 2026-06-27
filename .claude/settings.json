@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"^html, body {\" -A8 /Users/valeriaelisabetminjolou/Desktop/web/paisano-site/style.css)"
+    ]
+  }
+}

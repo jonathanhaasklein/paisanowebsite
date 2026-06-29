@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -n \"^html, body {\" -A8 /Users/valeriaelisabetminjolou/Desktop/web/paisano-site/style.css)"
+      "Bash(grep -n \"^html, body {\" -A8 /Users/valeriaelisabetminjolou/Desktop/web/paisano-site/style.css)",
+      "Bash(mkdir -p ~/.npm-global)",
+      "Bash(echo \"Prefix set to: $\\(npm config get prefix\\)\")"
     ]
   }
 }
